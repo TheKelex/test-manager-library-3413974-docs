@@ -9,20 +9,21 @@ la arquitectura en [`architecture.md`](architecture.md) y las tareas con evidenc
 
 | # | Decisión | Elección para este reto | Por qué |
 |---|---|---|---|
-| D-01 | Frontend | React, ejecutado en contenedor | Stack exigido para la aplicación de operación |
-| D-02 | Backend | PHP con Laravel | Stack exigido; Laravel es el adaptador de entrada HTTP y el mecanismo de composición |
-| D-03 | Persistencia | PostgreSQL 16; migraciones de Laravel son propietarias del esquema | Una sola fuente de verdad para DDL y semilla (ADR-001) |
-| D-04 | Arquitectura backend | Dominio y aplicación PHP sin dependencias de Laravel; adaptadores Laravel en el borde | Mantener puertos y dependencias hacia el núcleo |
-| D-05 | Concurrencia | Actualización condicional/versionada del libro dentro de una transacción, más `CHECK` de rango | Evitar prestar dos veces el último ejemplar (RNF-2, ADR-002) |
-| D-06 | Fechas | Instantes UTC (`timestamptz`); el reloj es un puerto | Probar vencimientos sin esperar 14 días |
-| D-07 | Reporte | Consulta agregada de PostgreSQL detrás de un puerto de lectura | Resultado estable y eficiente (ADR-004) |
-| D-08 | Objetos de valor | `Isbn`, `Quantity`, `DocumentNumber` y `DateRange` en el dominio, sin tablas propias | No tienen identidad independiente |
-| D-09 | Portadas | Binario en almacenamiento externo; la base guarda solo `cover_key` | Clave opaca, nunca ruta ni bytes |
-| D-10 | Contraseñas | Argon2id detrás del puerto `PasswordHasher` | El dominio no recibe ni almacena la clave en claro |
-| D-11 | Arranque | El backend crea el admin inicial desde `ADMIN_USERNAME` y `ADMIN_PASSWORD` | El hash debe producirse mediante el puerto de seguridad |
-| D-12 | Autenticación | JWT HS256, duración de 8 horas, secreto en `JWT_SECRET` | Mantener el contrato funcional del spec |
-| D-13 | Ejecución | Docker/Compose para API, frontend, base de datos y utilidades | Docker es la única vía de ejecución del proyecto |
-| D-14 | Pruebas | Pruebas del dominio y aplicación con PHPUnit/fakes; integración y contrato contra PostgreSQL y API en contenedores | Aislar reglas y verificar comportamiento desplegado |
+| D-01 | Backend runtime/framework | PHP 8.4 y Laravel 13, dependencias exactas fijadas en `composer.lock` | Compatible con el esqueleto y las dependencias actuales generadas por Composer |
+| D-02 | Frontend | React, ejecutado en contenedor | Stack exigido para la aplicación de operación |
+| D-03 | Backend | PHP con Laravel | Stack exigido; Laravel es el adaptador de entrada HTTP y el mecanismo de composición |
+| D-04 | Persistencia | PostgreSQL 16; migraciones de Laravel son propietarias del esquema | Una sola fuente de verdad para DDL y semilla (ADR-001) |
+| D-05 | Arquitectura backend | Dominio y aplicación PHP sin dependencias de Laravel; adaptadores Laravel en el borde | Mantener puertos y dependencias hacia el núcleo |
+| D-06 | Concurrencia | Actualización condicional/versionada del libro dentro de una transacción, más `CHECK` de rango | Evitar prestar dos veces el último ejemplar (RNF-2, ADR-002) |
+| D-07 | Fechas | Instantes UTC (`timestamptz`); el reloj es un puerto | Probar vencimientos sin esperar 14 días |
+| D-08 | Reporte | Consulta agregada de PostgreSQL detrás de un puerto de lectura | Resultado estable y eficiente (ADR-004) |
+| D-09 | Objetos de valor | `Isbn`, `Quantity`, `DocumentNumber` y `DateRange` en el dominio, sin tablas propias | No tienen identidad independiente |
+| D-10 | Portadas | Binario en almacenamiento externo; la base guarda solo `cover_key` | Clave opaca, nunca ruta ni bytes |
+| D-11 | Contraseñas | Argon2id detrás del puerto `PasswordHasher` | El dominio no recibe ni almacena la clave en claro |
+| D-12 | Arranque | El backend crea el admin inicial desde `ADMIN_USERNAME` y `ADMIN_PASSWORD` | El hash debe producirse mediante el puerto de seguridad |
+| D-13 | Autenticación | JWT HS256, duración de 8 horas, secreto en `JWT_SECRET` | Mantener el contrato funcional del spec |
+| D-14 | Ejecución | Docker/Compose para API, frontend, base de datos y utilidades | Docker es la única vía de ejecución del proyecto |
+| D-15 | Pruebas | Pruebas del dominio y aplicación con PHPUnit/fakes; integración y contrato contra PostgreSQL y API en contenedores | Aislar reglas y verificar comportamiento desplegado |
 
 Las librerías concretas de JWT y cualquier dependencia adicional deben elegirse e incorporarse solo
 si son necesarias para satisfacer estas decisiones; no se cambia el contrato para acomodar una librería.
@@ -32,6 +33,25 @@ si son necesarias para satisfacer estas decisiones; no se cambia el contrato par
 Docker **no se deja para el final**. Desde T-01 se implementa el entorno mínimo reproducible para
 construir y probar el esqueleto de Laravel, verificar `GET /health` y disponer de PostgreSQL vacío.
 Las imágenes o servicios se añaden cuando cada componente exista.
+
+### T-01: alcance y decisiones de arranque
+
+- `infra/compose.yaml` orquesta `api` y `db`; `db` usa PostgreSQL 16 y un volumen persistente.
+- La API se construye desde `api/Dockerfile` y expone HTTP en el puerto 8000 del host.
+- El contenedor de API instala las dependencias fijadas por `composer.lock` y sirve Laravel en
+  `0.0.0.0:8000`.
+- `GET /health` es público y responde exactamente `{"status":"ok"}`. No se cambia a
+  `/api/v1/health`: el contrato define explícitamente `/health`.
+- PostgreSQL se configura con variables de entorno. `.env` local no se versiona; `.env.example`
+  documenta nombres y valores ilustrativos no secretos.
+- No se ejecutan `artisan migrate`, seeders ni creación automática de tablas al arrancar. La base
+  debe estar disponible, pero sin tablas de negocio hasta T-02.
+- Las pruebas T-01 incluyen una prueba HTTP del endpoint y una consulta dentro del contenedor de
+  PostgreSQL que confirma que no existen tablas de negocio.
+
+Este es un entorno inicial de desarrollo y verificación, no un despliegue de producción. Las
+necesidades de servidor, endurecimiento de imagen y servicios frontend se documentan al integrar
+Compose en T-20.
 
 T-20 integra el núcleo compuesto por API, frontend y PostgreSQL después de que exista el esqueleto
 React. Las tareas de `tool` y `page` deben ejecutarse también dentro de contenedores y añadir sus
@@ -84,5 +104,5 @@ acuerdo con la restricción del proyecto.
 Documentar y validar el diseño → esqueleto Laravel y PostgreSQL vacío en Docker → migración inicial
 y categorías → dominio → casos de uso con fakes → adaptadores de persistencia, seguridad y archivos
 → API y pruebas de contrato/concurrencia → composición y alta inicial del admin → Compose de núcleo
-con esqueleto React → frontend funcional, sembrador y sitio público en contenedores. El detalle y las dependencias están en
-[`tasks.md`](tasks.md).
+con esqueleto React → frontend funcional, sembrador y sitio público en contenedores. El detalle y las
+dependencias están en [`tasks.md`](tasks.md).

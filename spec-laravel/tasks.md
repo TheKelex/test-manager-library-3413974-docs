@@ -4,9 +4,17 @@ Cada tarea termina cuando su evidencia existe y se puede ejecutar mediante Docke
 [Artículo XIII](constitution.md). Estado inicial: **pendiente**. Se conserva el orden funcional del
 spec base y se adaptan las evidencias técnicas al stack PHP/Laravel y React.
 
+## Estado y evidencia de ejecución
+
+- **T-01 — completada:** API Laravel y PostgreSQL 16 levantan con Docker Compose; `GET /health`
+  respondió HTTP 200 con `{"status":"ok"}`; `php artisan test --display-warnings` pasó (2 pruebas,
+  3 aserciones); la consulta a `pg_tables` confirmó cero tablas en `public` antes de T-02.
+- Docker engine y Compose se usaron para generar el esqueleto Laravel; no se ejecutaron migraciones.
+- Las tareas T-02 en adelante continúan pendientes.
+
 | # | Tarea | Depende de | Evidencia |
 |---|---|---|---|
-| T-01 | Esqueleto Laravel, Docker mínimo, PostgreSQL vacío y `GET /health` | — | API y PostgreSQL arrancan en contenedores; `GET /health` responde `{"status":"ok"}` y la base no tiene tablas de negocio |
+| T-01 | Esqueleto Laravel, Docker mínimo, PostgreSQL vacío y `GET /health` | — | `infra/compose.yaml` levanta API y PostgreSQL; `GET /health` devuelve exactamente `{"status":"ok"}` y PostgreSQL no tiene tablas de negocio; prueba HTTP ejecutable dentro del contenedor |
 | T-02 | Migración inicial: seis tablas, FK, índices únicos y cinco categorías | T-01 | Migraciones/seeders crean lo documentado; consultas de `data-model.md` §10 coinciden; ninguna columna con `DEFAULT` |
 | T-03 | Dominio: `Isbn`, `Quantity`, `DateRange` | T-01 | PHPUnit prueba ISBN de 13 dígitos, cantidad > 0 y fin ≥ inicio, sin framework ni base |
 | T-04 | Dominio: `Book` (retirar, reponer y baja lógica) | T-03 | PHPUnit demuestra que disponibles nunca quedan < 0 ni > total |
