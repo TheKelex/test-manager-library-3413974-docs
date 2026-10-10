@@ -140,3 +140,26 @@ y categorías → dominio → casos de uso con fakes → adaptadores de persiste
 → API y pruebas de contrato/concurrencia → composición y alta inicial del admin → Compose de núcleo
 con esqueleto React → frontend funcional, sembrador y sitio público en contenedores. El detalle y las
 dependencias están en [`tasks.md`](tasks.md).
+
+## 7. Alcance de construcción T-11–T-20
+
+Estas tareas completan el reporte y el backend utilizable, y dejan el esqueleto React integrado. No
+modifican el contrato de [`api-contract.md`](api-contract.md) ni las fronteras de
+[`architecture.md`](architecture.md).
+
+| Tarea | Decisión de implementación | Verificación Docker |
+|---|---|---|
+| T-11 | Puerto de lectura del reporte; consulta agregada con fechas inclusivas por `loaned_at` y snapshots congelados de `loan_item` | Pruebas del caso de uso y consulta PostgreSQL para rango inválido, desempate, inclusividad y renombre de catálogo |
+| T-12 | Adaptadores Eloquent para libros, categorías, socios y usuarios; conversión explícita a entidades/DTOs de aplicación | Pruebas de integración contra el servicio PostgreSQL migrado |
+| T-13 | Escrituras atómicas de préstamo/devolución; bloqueo del socio y libros en orden estable, revalidación bajo transacción y control de última copia | Prueba de concurrencia contra PostgreSQL real: una operación exitosa y otra conflicto al competir por la última copia |
+| T-14 | Hash Argon2id y JWT HS256 con claims `sub`/`role`, secreto por entorno y 8 horas | Pruebas de hash/token y análisis de respuestas/logs sin secretos |
+| T-15 | Disco local privado con clave opaca y validación por contenido de JPEG/PNG hasta 2 MiB | Aceptar 2 MiB, rechazar >2 MiB y contenido falso; referencia nula al quitar portada |
+| T-16 | Adaptadores Laravel para cada ruta del contrato, autenticación/autorización por rol, validación y error uniforme | Pruebas HTTP de rutas, códigos, permisos, serialización y cuerpo de error frente al contrato |
+| T-17 | Proveedor de composición único; aprovisionamiento idempotente de admin desde variables de entorno | En DB limpia, migración explícita, bootstrap seguro del admin y login HTTP correcto |
+| T-18 | Migración reversible con `ck_book_total_positive` y `ck_user_role` | Inserciones inválidas fallan en PostgreSQL; consultas de `data-model.md` reflejan ambas reglas |
+| T-19 | Pruebas que bloquean dependencias Laravel/Adapters desde Domain/Application y bindings fuera del composition root | PHPUnit ejecutado en contenedor |
+| T-20 | Esqueleto React con Vite y servidor estático de desarrollo en contenedor; PostgreSQL y API en Compose | Arranque Compose, health checks disponibles y cero tablas de negocio antes de migración |
+
+Compose no migra, no siembra y no crea el administrador al arrancar. Las operaciones de
+configuración de datos permanecen explícitas. Las variables sensibles se suministran en `.env`
+local ignorado y nunca se incorporan al frontend.

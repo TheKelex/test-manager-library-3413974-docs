@@ -119,6 +119,8 @@ facades de Laravel.
   consultar si existen líneas abiertas antes de dar de baja.
 - `MemberRepository`: obtener un socio por id.
 - `UserRepository`: obtener por username y persistir usuario.
+- `CategoryRepository`: listar las cinco categorías ordenadas por nombre y buscar una categoría
+  activa por id para validar el alta/edición de libros.
 - `LoanRepository`: obtener préstamo/línea necesarios para devolver, contar líneas no devueltas
   del socio, detectar vencidos y listar el resultado operativo de vencidos.
 - `LoanRepository::saveLendingAtomically(Loan, list<Book>)`: una única operación de puerto; el
@@ -131,6 +133,9 @@ facades de Laravel.
 - `TokenIssuer`: emitir token para id/rol autenticado, con vigencia fijada por el contrato.
 - `CoverStorage`: guardar bytes validados y devolver clave opaca; eliminar binario por clave.
 - `Clock`: proveer un instante UTC para vencimientos y estados calculados.
+- `MostBorrowedReportReader`: recibir un `DateRange` inclusivo y devolver filas agregadas por
+  `book_id`, `book_title` y `category_name` congelados, ordenadas por cantidad descendente y luego
+  título. Nunca devuelve datos de socios ni bibliotecarios.
 
 Los puertos nunca aceptan modelos Eloquent ni retornan objetos HTTP. Las búsquedas de libros usan
 criterios y una página de aplicación, no el paginador de Laravel.
@@ -157,6 +162,48 @@ uniforme; las capas internas no asignan códigos HTTP.
 
 `LendBooks` valida todas las condiciones antes de invocar la persistencia atómica. Ante cualquier
 error no se guarda préstamo parcial ni se descuentan copias en el dominio persistido.
+
+### Caso de uso T-11
+
+`GetMostBorrowedReport` valida el rango inclusivo mediante `DateRange`, consulta el puerto de
+lectura con límites UTC de día y presenta las filas ordenadas por el reporte. PostgreSQL cuenta
+préstamos por fecha de alta (`loan.loaned_at`) y agrupa usando los valores históricos de
+`loan_item`; renombrar un libro o categoría no reescribe el pasado. Un rango invertido produce
+`INVALID_DATE_RANGE` según el contrato.
+
+### Adaptadores y composición T-12–T-17
+
+- Los modelos Eloquent de las seis tablas se ubican bajo
+  `Adapters/Outbound/Persistence/Eloquent/Models/`, con esquema `library`, claves UUID y sin
+  timestamps automáticos. Los repositorios reconstruyen entidades de dominio; ningún modelo
+  Eloquent cruza un puerto.
+- Las escrituras de préstamo y devolución se realizan en transacciones. Para impedir sobreventa y
+  límites concurrentes, el adaptador bloquea primero la fila del socio y después las filas de
+  libros en orden estable, vuelve a validar los préstamos activos y vencidos, y actualiza solo si
+  queda disponibilidad. Los conflictos de negocio se traducen a errores tipados de aplicación.
+- `Argon2idPasswordHasher` implementa `PasswordHasher`; `JwtTokenIssuer` implementa tokens HS256
+  con vigencia de 8 horas, `sub` y `role`, sin datos personales.
+- `LocalCoverStorage` almacena solo JPEG/PNG bajo claves no adivinables en disco privado. El
+  adaptador de aplicación valida tamaño máximo de 2 MiB y tipo detectado por contenido antes de
+  guardar; al reemplazar/eliminar, primero persiste la referencia nueva/nula y solo después borra
+  el binario anterior.
+- Los controladores, requests y resources Laravel traducen el contrato HTTP a DTOs y casos de uso.
+  El middleware autentica JWT y autoriza roles; un renderizador común produce exactamente
+  `code`, `message` y `details` sin filtrar excepciones de infraestructura.
+- `LibraryServiceProvider` es el único punto que enlaza puertos con adaptadores. El administrador
+  inicial se aprovisiona de forma idempotente desde `ADMIN_USERNAME` y `ADMIN_PASSWORD`; la clave
+  se hashea mediante el puerto y no se registra.
+
+### T-18–T-20
+
+- T-18 añade restricciones PostgreSQL para total de copias positivo y roles admitidos; las marcas
+  del modelo de datos deben coincidir con el esquema real.
+- T-19 verifica por pruebas automatizadas la independencia del dominio/aplicación y que los
+  bindings concretos estén concentrados en el proveedor de composición.
+- T-20 integra el esqueleto React (Vite) y sus dependencias en Compose junto a API y PostgreSQL.
+  No ejecuta migraciones ni aprovisiona datos automáticamente. Los tres servicios tienen health
+  checks/dependencias de disponibilidad y la base sigue vacía hasta el comando explícito de
+  migración.
 
 ## 5. Agregados e invariantes
 

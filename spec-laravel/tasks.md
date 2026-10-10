@@ -20,7 +20,9 @@ spec base y se adaptan las evidencias técnicas al stack PHP/Laravel y React.
   **30 pruebas y 104 aserciones**, y `./vendor/bin/pint --test app/Domain app/Application
   tests/Fakes tests/Unit tests/Feature/ApplicationUseCasesTest.php` aprobó el formato. Los
   adaptadores de infraestructura y HTTP permanecen para sus tareas posteriores.
-- Las tareas T-11 en adelante continúan pendientes.
+- **T-11 a T-20 — planificadas para implementación:** se documentan decisiones, límites y evidencia
+  esperada en [architecture.md](architecture.md) y [plan.md](plan.md). Sin cambio al contrato API.
+- Las tareas T-21 en adelante continúan pendientes.
 
 | # | Tarea | Depende de | Evidencia |
 |---|---|---|---|
@@ -34,16 +36,16 @@ spec base y se adaptan las evidencias técnicas al stack PHP/Laravel y React.
 | T-08 | Puertos y casos de uso de libros con fakes | T-04 | **Completada:** alta/búsqueda/consulta/edición/baja; ISBN único activo y validación de portada JPG/PNG hasta 2 MB |
 | T-09 | Caso de uso de préstamo con fakes | T-05, T-08 | **Completada:** límite del socio, vencidos, duplicados, disponibilidad y una sola escritura atómica |
 | T-10 | Casos de uso de devolución y vencidos | T-09 | **Completada:** reposición única, rechazo de segunda devolución y vencidos estrictos ordenados por atraso |
-| T-11 | Caso de uso y puerto del reporte de más prestados | T-09 | HU-10; el valor congelado se conserva tras renombrar (ADR-004) |
-| T-12 | Adaptador de persistencia para libros, socios y usuarios | T-02, T-08 | Pruebas de integración contra PostgreSQL real en contenedor |
+| T-11 | Caso de uso y puerto del reporte de más prestados | T-09 | HU-10; reporte PostgreSQL con rango inclusivo, snapshots congelados y orden contractual |
+| T-12 | Adaptador de persistencia para libros, socios y usuarios | T-02, T-08 | Repositorios/mapeos con pruebas de integración contra PostgreSQL real en contenedor |
 | T-13 | Adaptador de persistencia de préstamos y control de concurrencia | T-12, T-09 | Dos solicitudes concurrentes por el último ejemplar: una 201 y otra 409 (RNF-2) |
-| T-14 | Adaptador de seguridad: hash y JWT | T-07 | La clave nunca aparece en logs ni respuestas (RNF-3); token válido por 8 horas |
-| T-15 | Adaptador de almacenamiento de portadas | T-08 | PNG de 2 MB aceptado; 3 MB → 422; sin portada → `cover_key` nulo |
-| T-16 | Adaptador HTTP Laravel y contrato completo | T-10, T-11, T-14, T-15 | Pruebas de contrato recorren rutas, roles, cuerpo único de error y códigos de `api-contract.md` |
-| T-17 | Composición Laravel y admin inicial desde entorno | T-16 | Base vacía, migraciones ejecutadas y login inicial exitoso desde API |
-| T-18 | Añadir a PostgreSQL `ck_book_total_positive` y `ck_user_role` | T-12 | Escrituras inválidas fallan en PostgreSQL; `data-model.md` §4 se actualiza |
+| T-14 | Adaptador de seguridad: hash y JWT | T-07 | Hash Argon2id; JWT `sub`/`role` válido por 8 horas; clave nunca aparece en logs ni respuestas |
+| T-15 | Adaptador de almacenamiento de portadas | T-08 | JPEG/PNG real de 2 MiB aceptado; >2 MiB y formato falso rechazados; sin portada → `cover_key` nulo |
+| T-16 | Adaptador HTTP Laravel y contrato completo | T-10, T-11, T-14, T-15 | Pruebas HTTP de rutas, roles, cuerpo único de error y códigos exactos de `api-contract.md` |
+| T-17 | Composición Laravel y admin inicial desde entorno | T-16 | Migración explícita y login inicial exitoso desde API, sin exponer ni registrar contraseña |
+| T-18 | Añadir a PostgreSQL `ck_book_total_positive` y `ck_user_role` | T-12 | Escrituras inválidas fallan en PostgreSQL; `data-model.md` §4 y consultas §10 reflejan ambas reglas |
 | T-19 | Pruebas de arquitectura hexagonal | T-17 | Pruebas automatizadas detectan dependencias prohibidas y composición fuera del Service Provider |
-| T-20 | Integrar Docker Compose para API, esqueleto frontend y PostgreSQL vacío | T-17 | Un comando levanta los contenedores del núcleo; base sin tablas antes de migrar; health checks disponibles |
+| T-20 | Integrar Docker Compose para API, esqueleto frontend y PostgreSQL vacío | T-17 | Un comando levanta API, React y DB; health checks disponibles; cero tablas antes de migrar |
 | T-21 | Sembrador de demostración en contenedor que usa la API | T-17 | ≥ 40 libros, 10 socios, 15 préstamos y 3 vencidos; API devuelve los vencidos y reporte con filas |
 | T-22 | Frontend React en contenedor: login, catálogo, socios, prestar, devolver, vencidos y reporte | T-16, T-20 | Recorrido manual de punta a punta usando frontend y API en contenedores |
 | T-23 | Sitio público estático en contenedor | — | Se sirve en contenedor sin depender de la API; correcto en móvil y escritorio |
