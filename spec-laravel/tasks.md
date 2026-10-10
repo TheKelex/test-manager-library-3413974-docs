@@ -28,7 +28,15 @@ spec base y se adaptan las evidencias técnicas al stack PHP/Laravel y React.
   409 al competir por la última copia; API, app y DB quedaron saludables. Una base temporal nueva
   tuvo cero tablas funcionales antes de migrar y se eliminó al terminar la verificación. Sin cambio
   al contrato API ni a la arquitectura hexagonal.
-- Las tareas T-21 en adelante continúan pendientes.
+- **T-21 a T-23 — completadas:** sembrador idempotente en contenedor que usa la API; panel React
+  para login, gestión de catálogo, socios, préstamos, devoluciones, vencidos y reporte; sitio
+  público estático independiente. En la validación final, el API pasó **54 pruebas y 491
+  aserciones**, Pint pasó **134 archivos** y `npm run build` generó la app. El sembrador creó
+  **40 libros, 10 socios, 15 préstamos y 15 vencidos**, informó filas del reporte y una segunda
+  ejecución no duplicó datos. El recorrido del panel registró un socio, creó un préstamo HTTP 201
+  y devolvió su ejemplar HTTP 200; la vista de vencidos mostró 15 filas. El sitio estático y
+  `/health` respondieron HTTP 200, está saludable en Compose y se comprobó en escritorio y móvil
+  sin referencias ni llamadas a la API.
 
 | # | Tarea | Depende de | Evidencia |
 |---|---|---|---|
@@ -52,9 +60,9 @@ spec base y se adaptan las evidencias técnicas al stack PHP/Laravel y React.
 | T-18 | Añadir a PostgreSQL `ck_book_total_positive` y `ck_user_role` | T-12 | **Completada:** PostgreSQL rechaza escrituras inválidas; migración reversible y `data-model.md` §4 reflejan ambas reglas |
 | T-19 | Pruebas de arquitectura hexagonal | T-17 | **Completada:** PHPUnit detecta dependencias prohibidas y bindings fuera del Service Provider |
 | T-20 | Integrar Docker Compose para API, esqueleto frontend y PostgreSQL vacío | T-17 | **Completada:** API, React y DB saludables; build React aprobado; nueva base verificada con cero tablas antes de migrar |
-| T-21 | Sembrador de demostración en contenedor que usa la API | T-17 | ≥ 40 libros, 10 socios, 15 préstamos y 3 vencidos; API devuelve los vencidos y reporte con filas |
-| T-22 | Frontend React en contenedor: login, catálogo, socios, prestar, devolver, vencidos y reporte | T-16, T-20 | Recorrido manual de punta a punta usando frontend y API en contenedores |
-| T-23 | Sitio público estático en contenedor | — | Se sirve en contenedor sin depender de la API; correcto en móvil y escritorio |
+| T-21 | Sembrador de demostración en contenedor que usa la API | T-17 | **Completada:** 40 libros, 10 socios, 15 préstamos y 15 vencidos; rutas de vencidos e informe devuelven filas; segunda ejecución no duplica |
+| T-22 | Frontend React en contenedor: login, catálogo, socios, prestar, devolver, vencidos y reporte | T-16, T-20 | **Completada:** recorrido en navegador con API; login, registro de socio, préstamo 201, devolución 200 y lista de vencidos; manejo de roles y build de producción |
+| T-23 | Sitio público estático en contenedor | — | **Completada:** servidor independiente sin API, imagen Nginx saludable, contenido y `/health` 200; vista revisada en móvil y escritorio |
 
 ## Definición de terminado
 

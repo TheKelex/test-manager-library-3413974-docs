@@ -92,16 +92,17 @@ uso.
 ## 3. Frontend (`app`)
 
 React consume únicamente el contrato `/api/v1` mediante un cliente HTTP centralizado. La UI no
-contiene reglas de negocio ni accede directamente a la base. La organización por páginas,
-componentes y funcionalidades debe mantener separados:
+contiene reglas de negocio ni accede directamente a la base; el token vive solo en memoria. Sus
+flujos cubren login, catálogo, socios, préstamos, devoluciones, vencidos y reporte de más prestados.
+La organización por páginas, componentes y funcionalidades debe mantener separados:
 
 - presentación y navegación;
 - estado y flujos de cada funcionalidad;
 - cliente HTTP, manejo de sesión y traducción de errores del contrato.
 
-La aplicación React se construye y ejecuta dentro de su contenedor. El detalle de herramientas y
-estructura de carpetas del frontend se concreta antes de sus tareas de implementación, sin alterar
-el contrato de Laravel.
+La aplicación React se construye y ejecuta dentro de su contenedor; los errores visibles conservan
+el mensaje español del contrato. Las variables `VITE_*` solo contienen configuración pública y no
+secretos.
 
 ## 4. Puertos y casos de uso
 
@@ -204,6 +205,17 @@ préstamos por fecha de alta (`loan.loaned_at`) y agrupa usando los valores hist
   No ejecuta migraciones ni aprovisiona datos automáticamente. Los tres servicios tienen health
   checks/dependencias de disponibilidad y la base sigue vacía hasta el comando explícito de
   migración.
+
+### T-21–T-23
+
+- T-21 ejecuta un contenedor puntual `tool` que inicia sesión y crea/consulta los datos solo a
+  través de la API. El perfil Compose `tools` levanta además un proceso API aislado con reloj fijo
+  `DEMO_LIBRARY_TIME` para producir préstamos históricos; la API principal, con tiempo real, los
+  consulta como vencidos. No se agrega una ruta ni se cambia el contrato.
+- T-22 completa los flujos de operación en React; las lecturas/escrituras se realizan por el cliente
+  HTTP del frontend y están cubiertas por la API de contrato.
+- T-23 es un sitio estático independiente, servido por su propio contenedor web, sin dependencia ni
+  solicitudes a la API.
 
 ## 5. Agregados e invariantes
 
