@@ -69,12 +69,14 @@ Compose en T-20.
   arrancar.
 - La tabla técnica `public.migrations` es el registro de Laravel y no forma parte de las seis
   entidades. El esquema `library` se crea desde la migración, nunca desde `infra`.
-- Se implementan solo las restricciones marcadas como motor para esta tarea. `ck_book_total_positive`
-  y `ck_user_role` siguen pendientes de T-18, como indica el modelo.
+- La migración inicial crea las restricciones marcadas como motor para T-02. T-18 agrega después
+  `ck_book_total_positive` y `ck_user_role`, con su propia migración reversible.
 
 T-20 integra el núcleo compuesto por API, frontend y PostgreSQL después de que exista el esqueleto
-React. Las tareas de `tool` y `page` deben ejecutarse también dentro de contenedores y añadir sus
-servicios a Compose cuando existan; no se espera hasta el final para comenzar a trabajar con Docker.
+React. La API de desarrollo inicia Laravel con `--no-reload` para que el servidor PHP respete
+`PHP_CLI_SERVER_WORKERS` y permita verificar solicitudes concurrentes por HTTP. Las tareas de
+`tool` y `page` deben ejecutarse también dentro de contenedores y añadir sus servicios a Compose
+cuando existan; no se espera hasta el final para comenzar a trabajar con Docker.
 
 La documentación de Docker se define ahora: responsabilidades de imágenes, redes, volúmenes,
 variables de entorno, salud y comando de arranque. La implementación concreta evoluciona junto con
