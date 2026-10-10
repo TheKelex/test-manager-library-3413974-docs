@@ -10,7 +10,11 @@ spec base y se adaptan las evidencias técnicas al stack PHP/Laravel y React.
   respondió HTTP 200 con `{"status":"ok"}`; `php artisan test --display-warnings` pasó (2 pruebas,
   3 aserciones); la consulta a `pg_tables` confirmó cero tablas en `public` antes de T-02.
 - Docker engine y Compose se usaron para generar el esqueleto Laravel; no se ejecutaron migraciones.
-- Las tareas T-02 en adelante continúan pendientes.
+- **T-02 — completada:** `php artisan migrate --seed --force` crea las seis tablas en `library` y
+  siembra las cinco categorías; rollback y reaplicación pasan; `migrate:status` detecta la migración;
+  PostgreSQL informa 30 columnas, cero valores `DEFAULT`, restricciones e índices coincidentes con
+  el modelo. Repetir `CategorySeeder` conserva cinco filas.
+- Las tareas T-03 en adelante continúan pendientes.
 
 | # | Tarea | Depende de | Evidencia |
 |---|---|---|---|

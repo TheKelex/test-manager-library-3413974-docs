@@ -192,7 +192,8 @@ y `book.deleted_at`. Si aparece una pregunta del tipo «¿quién cambió este t�
 
 ## 9. Estrategia de semilla
 
-Las **cinco categorías** van en la migración inicial, con identificadores fijos:
+Las **cinco categorías** se cargan al inicializar el esquema con el seeder de Laravel invocado
+explícitamente (`php artisan migrate --seed`); mantienen identificadores fijos:
 
 | `id` | `name` |
 |---|---|
@@ -204,6 +205,11 @@ Las **cinco categorías** van en la migración inicial, con identificadores fijo
 
 El **administrador inicial no lo siembra la base**: lo crea el arranque de la aplicación con credenciales de entorno, porque el hash
 solo puede producirlo el puerto de hash. El sembrador de datos de demostración (`tool`) usa la **API**, nunca SQL directo.
+
+La migración inicial crea el esquema PostgreSQL `library` y las seis tablas de negocio. Laravel
+mantiene su registro técnico de migraciones en `public`; esa tabla no pertenece al modelo de dominio
+ni cuenta entre las seis entidades. La conexión de la aplicación usa `search_path=library,public`.
+Ni Compose ni la imagen de PostgreSQL crean tablas o ejecutan DDL.
 
 ## 10. Cómo se comprueba que este documento no miente
 

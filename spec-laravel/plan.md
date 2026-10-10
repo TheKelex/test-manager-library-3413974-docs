@@ -53,6 +53,25 @@ Este es un entorno inicial de desarrollo y verificación, no un despliegue de pr
 necesidades de servidor, endurecimiento de imagen y servicios frontend se documentan al integrar
 Compose en T-20.
 
+### T-02: migración y semilla
+
+- El esquema funcional es `library`; la conexión PostgreSQL usa `search_path=library,public`.
+- Una migración inicial crea el esquema y las seis tablas descritas en `data-model.md`, con los
+  nombres, tipos, nulabilidad, claves foráneas e índices especificados.
+- Los UUID los proporciona la aplicación; ninguna columna funcional usa `DEFAULT`, timestamps
+  automáticos o columnas de auditoría.
+- El historial técnico de Laravel se declara como `public.migrations` de forma explícita; las
+  seis tablas funcionales se crean en `library`. Esto permite que `migrate:status` encuentre su
+  historial aunque la conexión use `library` como esquema actual.
+- Los índices parciales específicos de PostgreSQL se declaran explícitamente en la migración.
+- `DatabaseSeeder` invoca solo `CategorySeeder`, que inserta las cinco categorías con sus UUID
+  fijos. `php artisan migrate --seed` se ejecuta explícitamente; Compose no migra ni siembra al
+  arrancar.
+- La tabla técnica `public.migrations` es el registro de Laravel y no forma parte de las seis
+  entidades. El esquema `library` se crea desde la migración, nunca desde `infra`.
+- Se implementan solo las restricciones marcadas como motor para esta tarea. `ck_book_total_positive`
+  y `ck_user_role` siguen pendientes de T-18, como indica el modelo.
+
 T-20 integra el núcleo compuesto por API, frontend y PostgreSQL después de que exista el esqueleto
 React. Las tareas de `tool` y `page` deben ejecutarse también dentro de contenedores y añadir sus
 servicios a Compose cuando existan; no se espera hasta el final para comenzar a trabajar con Docker.
@@ -79,6 +98,7 @@ Laravel ejecutadas explícitamente, no con scripts de inicialización de Postgre
 | `ADMIN_USERNAME` / `ADMIN_PASSWORD` | Sí | Alta inicial del administrador; nunca se versionan |
 | `COVERS_DIR` | No | Ubicación del almacenamiento de portadas |
 | `CORS_ORIGIN` | Sí | Origen permitido para el frontend React |
+| `DB_SCHEMA_PATH` | No | `library,public`, para resolver el esquema funcional del modelo |
 
 Los valores de desarrollo se suministran mediante `.env` ignorado por Git y `.env.example` sin
 secretos. En contenedores, la API se conecta al nombre del servicio de PostgreSQL, no a `localhost`.
