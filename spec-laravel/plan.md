@@ -165,3 +165,20 @@ modifican el contrato de [`api-contract.md`](api-contract.md) ni las fronteras d
 Compose no migra, no siembra y no crea el administrador al arrancar. Las operaciones de
 configuración de datos permanecen explícitas. Las variables sensibles se suministran en `.env`
 local ignorado y nunca se incorporan al frontend.
+
+## 8. Alcance de cierre T-21–T-23
+
+Estas tareas completan las tres superficies de demostración sin modificar el contrato API ni sus
+fronteras arquitectónicas:
+
+| Tarea | Decisión de implementación | Verificación |
+|---|---|---|
+| T-21 | Herramienta Node.js de ejecución puntual, autenticada como administrador y conectada solo a la API; datos identificables y reejecución sin duplicados | Servicio Compose `tool` bajo perfil explícito; crea al menos 40 libros, 10 socios, 15 préstamos y 3 vencidos; las rutas de vencidos y reporte devuelven filas |
+| T-22 | React consume `/api/v1` por HTTP; token en memoria, mensajes contractuales y formularios accesibles para login, catálogo, socios, préstamos, devoluciones, vencidos e informe | Build de producción más recorrido HTTP/visual completo en contenedores, con datos de demostración |
+| T-23 | Sitio de presentación estático, autocontenido y sin llamadas ni dependencia de la API | Contenedor web dedicado, health check, respuesta estática y validación responsive de escritorio/móvil |
+
+El sembrador obtiene las credenciales de administrador del entorno en tiempo de ejecución, nunca
+las incorpora al frontend ni accede directamente a PostgreSQL. La ejecución queda separada del
+arranque habitual de Compose: aplicar migraciones y aprovisionar el administrador son pasos
+explícitos; luego se invoca el servicio de herramienta bajo su perfil. El sitio público se ejecuta
+independientemente del stack de API y base de datos.
