@@ -14,22 +14,26 @@ spec base y se adaptan las evidencias técnicas al stack PHP/Laravel y React.
   siembra las cinco categorías; rollback y reaplicación pasan; `migrate:status` detecta la migración;
   PostgreSQL informa 30 columnas, cero valores `DEFAULT`, restricciones e índices coincidentes con
   el modelo. Repetir `CategorySeeder` conserva cinco filas.
-- **T-03 a T-10 — en progreso:** documentados los contratos de puertos, límites de atomicidad y
-  reglas de dominio/aplicación; implementación y pruebas con fakes en curso.
+- **T-03 a T-10 — completadas:** dominio PHP puro para ISBN, cantidades, fechas, libros, préstamos,
+  socios y usuarios; puertos de salida y casos de uso de autenticación, catálogo, portadas, préstamos,
+  devoluciones y vencidos. En el contenedor API, `php artisan test --display-warnings` pasó con
+  **30 pruebas y 104 aserciones**, y `./vendor/bin/pint --test app/Domain app/Application
+  tests/Fakes tests/Unit tests/Feature/ApplicationUseCasesTest.php` aprobó el formato. Los
+  adaptadores de infraestructura y HTTP permanecen para sus tareas posteriores.
 - Las tareas T-11 en adelante continúan pendientes.
 
 | # | Tarea | Depende de | Evidencia |
 |---|---|---|---|
 | T-01 | Esqueleto Laravel, Docker mínimo, PostgreSQL vacío y `GET /health` | — | `infra/compose.yaml` levanta API y PostgreSQL; `GET /health` devuelve exactamente `{"status":"ok"}` y PostgreSQL no tiene tablas de negocio; prueba HTTP ejecutable dentro del contenedor |
 | T-02 | Migración inicial: seis tablas, FK, índices únicos y cinco categorías | T-01 | Migraciones/seeders crean lo documentado; consultas de `data-model.md` §10 coinciden; ninguna columna con `DEFAULT` |
-| T-03 | Dominio: `Isbn`, `Quantity`, `DateRange` | T-01 | PHPUnit prueba ISBN de 13 dígitos, cantidad > 0 y fin ≥ inicio, sin framework ni base |
-| T-04 | Dominio: `Book` (retirar, reponer y baja lógica) | T-03 | PHPUnit demuestra que disponibles nunca quedan < 0 ni > total |
-| T-05 | Dominio: `Loan` y `LoanItem` (alta, devolución, estado calculado, 14 días y máximo 3) | T-04 | PHPUnit con reloj falso prueba `open`, `overdue` y `closed` |
-| T-06 | Dominio: `Member` y `User` | T-03 | Pruebas de normalización (`"Ana "` → `ana`) y rol; endpoint rechazará `admin` como rol solicitado |
-| T-07 | Puertos y casos de uso de autenticación con fakes | T-06 | HU-01 y HU-02 pasan con PHPUnit y fakes |
-| T-08 | Puertos y casos de uso de libros con fakes | T-04 | HU-03 y HU-04 pasan con PHPUnit y fakes |
-| T-09 | Caso de uso de préstamo con fakes | T-05, T-08 | HU-06 completa: límite, vencidos, duplicados y falta de ejemplares |
-| T-10 | Casos de uso de devolución y vencidos | T-09 | HU-07 y HU-09; devolver dos veces produce `ITEM_ALREADY_RETURNED` |
+| T-03 | Dominio: `Isbn`, `Quantity`, `DateRange` | T-01 | **Completada:** pruebas unitarias de ISBN de 13 dígitos, cantidad > 0 y rango de fechas válido; dominio PHP puro |
+| T-04 | Dominio: `Book` (retirar, reponer y baja lógica) | T-03 | **Completada:** pruebas unitarias de disponibilidad, ajuste de total y baja con préstamos |
+| T-05 | Dominio: `Loan` y `LoanItem` (alta, devolución, estado calculado, 14 días y máximo 3) | T-04 | **Completada:** reloj controlado prueba estados `open`, `overdue`, `closed`, plazo, máximo y doble devolución |
+| T-06 | Dominio: `Member` y `User` | T-03 | **Completada:** pruebas de nombre/documento, normalización de username y roles permitidos |
+| T-07 | Puertos y casos de uso de autenticación con fakes | T-06 | **Completada:** login con error indistinguible, token/rol/vigencia y alta de bibliotecario con hash y rol permitido |
+| T-08 | Puertos y casos de uso de libros con fakes | T-04 | **Completada:** alta/búsqueda/consulta/edición/baja; ISBN único activo y validación de portada JPG/PNG hasta 2 MB |
+| T-09 | Caso de uso de préstamo con fakes | T-05, T-08 | **Completada:** límite del socio, vencidos, duplicados, disponibilidad y una sola escritura atómica |
+| T-10 | Casos de uso de devolución y vencidos | T-09 | **Completada:** reposición única, rechazo de segunda devolución y vencidos estrictos ordenados por atraso |
 | T-11 | Caso de uso y puerto del reporte de más prestados | T-09 | HU-10; el valor congelado se conserva tras renombrar (ADR-004) |
 | T-12 | Adaptador de persistencia para libros, socios y usuarios | T-02, T-08 | Pruebas de integración contra PostgreSQL real en contenedor |
 | T-13 | Adaptador de persistencia de préstamos y control de concurrencia | T-12, T-09 | Dos solicitudes concurrentes por el último ejemplar: una 201 y otra 409 (RNF-2) |
