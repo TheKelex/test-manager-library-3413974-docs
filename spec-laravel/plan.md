@@ -119,7 +119,21 @@ secretos. En contenedores, la API se conecta al nombre del servicio de PostgreSQ
 Los comandos de construcción, pruebas y ejecución se documentan para correr mediante Docker, de
 acuerdo con la restricción del proyecto.
 
-## 5. Orden de construcción
+## 5. Pruebas y entregables de dominio/aplicación (T-03–T-10)
+
+- Los tipos del dominio residen en `api/app/Domain/`; sus pruebas no cargan Laravel ni necesitan
+  conexión PostgreSQL.
+- Los puertos y servicios residen en `api/app/Application/`. Cada operación exterior se sustituye
+  por un fake en PHPUnit; no se escriben adaptadores de base o HTTP en esta fase.
+- Los casos de uso de préstamo/devolución entregan los cambios al puerto como una operación
+  atómica. Las pruebas de fake verifican que errores de validación no invocan la escritura.
+- El calendario de préstamos usa un `Clock` inyectado. Se toma un único instante por operación, se
+  guarda UTC, se calcula vencimiento a 14 días y se considera vencido solo cuando `due_at < now`.
+- La unicidad de ISBN/nombre de usuario/documento consulta el puerto antes de guardar, sin sustituir
+  la restricción última del motor que ya está documentada.
+- Resultado de búsqueda y excepciones son tipos de aplicación sin clases Laravel ni códigos HTTP.
+
+## 6. Orden de construcción
 
 Documentar y validar el diseño → esqueleto Laravel y PostgreSQL vacío en Docker → migración inicial
 y categorías → dominio → casos de uso con fakes → adaptadores de persistencia, seguridad y archivos

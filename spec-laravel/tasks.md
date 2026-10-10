@@ -14,7 +14,9 @@ spec base y se adaptan las evidencias técnicas al stack PHP/Laravel y React.
   siembra las cinco categorías; rollback y reaplicación pasan; `migrate:status` detecta la migración;
   PostgreSQL informa 30 columnas, cero valores `DEFAULT`, restricciones e índices coincidentes con
   el modelo. Repetir `CategorySeeder` conserva cinco filas.
-- Las tareas T-03 en adelante continúan pendientes.
+- **T-03 a T-10 — en progreso:** documentados los contratos de puertos, límites de atomicidad y
+  reglas de dominio/aplicación; implementación y pruebas con fakes en curso.
+- Las tareas T-11 en adelante continúan pendientes.
 
 | # | Tarea | Depende de | Evidencia |
 |---|---|---|---|

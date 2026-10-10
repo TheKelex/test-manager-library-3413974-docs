@@ -113,6 +113,51 @@ Los casos de uso incluyen `LendBooks`, `ReturnItem`, creación y búsqueda de li
 reporte, login y creación de bibliotecario. No reciben `Request`, `Model`, `Builder`, `Response` ni
 facades de Laravel.
 
+### Contratos de puertos para T-03–T-11
+
+- `BookRepository`: buscar por id/ISBN, guardar libro y buscar libros por criterios paginados;
+  consultar si existen líneas abiertas antes de dar de baja.
+- `MemberRepository`: obtener un socio por id.
+- `UserRepository`: obtener por username y persistir usuario.
+- `LoanRepository`: obtener préstamo/línea necesarios para devolver, contar líneas no devueltas
+  del socio, detectar vencidos y listar el resultado operativo de vencidos.
+- `LoanRepository::saveLendingAtomically(Loan, list<Book>)`: una única operación de puerto; el
+  adaptador futuro persiste préstamo, líneas y copias en una transacción. Un conflicto de
+  disponibilidad concurrente se expresa como `BookNotAvailable`.
+- `LoanRepository::returnItemAtomically(Loan, LoanItem, Book)`: actualiza devolución y existencias
+  una vez, dentro de una transacción; el adaptador rechaza el doble retorno.
+- `PasswordHasher`: hashear y verificar; recibe secreto solo en el caso de uso/adaptador, nunca lo
+  conserva el dominio.
+- `TokenIssuer`: emitir token para id/rol autenticado, con vigencia fijada por el contrato.
+- `CoverStorage`: guardar bytes validados y devolver clave opaca; eliminar binario por clave.
+- `Clock`: proveer un instante UTC para vencimientos y estados calculados.
+
+Los puertos nunca aceptan modelos Eloquent ni retornan objetos HTTP. Las búsquedas de libros usan
+criterios y una página de aplicación, no el paginador de Laravel.
+
+### Errores de aplicación
+
+El dominio y los casos de uso exponen excepciones tipadas sin dependencia HTTP. Como mínimo se
+mantienen los códigos del contrato para credenciales/rol/nombre duplicado, ISBN duplicado,
+not-found, ejemplar no disponible, socio vencido/límite, libro duplicado en préstamo y línea ya
+devuelta. T-16 será responsable de traducirlos a status HTTP, mensaje localizado y el cuerpo
+uniforme; las capas internas no asignan códigos HTTP.
+
+### Casos de uso T-07–T-10
+
+| Caso de uso | Comportamiento verificable |
+|---|---|
+| `Login` | Usuario ausente o clave incorrecta produce el mismo `INVALID_CREDENTIALS`; éxito emite JWT por el puerto |
+| `CreateLibrarian` | Normaliza username, acepta solo rol `librarian`, guarda hash (nunca clave) y rechaza duplicado |
+| `CreateBook` / `SearchBooks` / `GetBook` / `UpdateBook` / `WithdrawBook` | ISBN único activo, disponibilidad inicial igual a total, ajustes de total conservan préstamos, baja lógica rechazada con préstamos abiertos |
+| `UploadCover` / `RemoveCover` | Persiste una clave opaca o null; binario fuera de la base |
+| `LendBooks` | Valida líneas y socio, reloj, carga libros; construye snapshots y entrega el cambio agregado a la operación atómica del puerto |
+| `ReturnItem` | Carga préstamo/línea/libro, cambia una única línea y usa la operación atómica del puerto |
+| `ListOverdue` | Solicita líneas pendientes vencidas al instante del reloj y produce días de atraso en orden descendente |
+
+`LendBooks` valida todas las condiciones antes de invocar la persistencia atómica. Ante cualquier
+error no se guarda préstamo parcial ni se descuentan copias en el dominio persistido.
+
 ## 5. Agregados e invariantes
 
 | Raíz | Contiene | Invariantes que defiende |
