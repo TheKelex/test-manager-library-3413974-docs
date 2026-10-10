@@ -3,7 +3,9 @@
 > **Prueba técnica · Ficha ADSO 3413974**
 > Horario: de **9:15 a. m. a 3:00 p. m.** (15:00). Después, **feria de presentación** de cada proyecto.
 
-Este repositorio contiene el **spec** de *Manager Library*. Es el único con contenido: los otros cinco empiezan vacíos.
+Este repositorio contiene el **spec** de *Manager Library*. Las carpetas `spec-python/` y
+`spec-.net/` son las versiones de referencia del producto; `spec-laravel/` contiene la adaptación
+documental para el stack React + Laravel del reto.
 
 ## Instrucciones
 
@@ -11,9 +13,12 @@ Cada aprendiz debe **crear el fork** de los seis repositorios del proyecto y **r
 con el spec planteado**.
 
 1. Hacer fork, a su cuenta de GitHub, de cada repositorio de la tabla del final.
-2. Leer el spec en [`test-manager-library-3413974-docs`](https://github.com/code-sena/test-manager-library-3413974-docs).
-   Se entrega en dos versiones: `spec-python/` y `spec-.net/`.
-3. Desarrollar en los forks.
+2. Leer el spec de referencia en [`spec-python/`](spec-python/) o [`spec-.net/`](spec-.net/).
+   Ambos describen el mismo producto y sus reglas de negocio.
+3. Para construir con React + Laravel, seguir la adaptación de [`spec-laravel/`](spec-laravel/).
+   Esta conserva historias, reglas, contrato y datos del spec base, y adapta arquitectura,
+   decisiones técnicas y tareas al stack del reto.
+4. Desarrollar en los forks.
 
 ## El reto se desarrolla con React y PHP (Laravel)
 
@@ -45,13 +50,14 @@ antes de las 3:00 p. m.**: no se presenta nada que no esté en GitHub.
 |---|---|
 | [`spec-python/`](spec-python/) | El spec de Manager Library escrito para un backend Python |
 | [`spec-.net/`](spec-.net/) | El mismo sistema especificado para un backend .NET |
+| [`spec-laravel/`](spec-laravel/) | Adaptación del spec para el reto React + Laravel; no cambia el negocio ni el contrato |
 
 Las dos versiones describen el **mismo producto** (las mismas historias, reglas de negocio y
 endpoints); cambian las decisiones de tecnología. Ninguna de las dos es el stack del reto.
 
 ## Cómo se lee el spec
 
-En cualquiera de las dos carpetas, en este orden:
+En la carpeta de adaptación `spec-laravel/`, usa este orden:
 
 1. `constitution.md` — principios innegociables.
 2. `spec.md` — qué debe hacer el sistema: actores, historias, criterios de aceptación, reglas de negocio.
